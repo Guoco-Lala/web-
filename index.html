@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo 列表基础版</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main class="todo-page">
+      <section class="todo-panel" aria-labelledby="page-title">
+        <h1 id="page-title">Todo 列表</h1>
+        <p>记录需要完成的事项。</p>
+
+        <div class="todo-form">
+          <label for="todo-input">待办事项</label>
+          <div class="input-row">
+            <input
+              id="todo-input"
+              type="text"
+              placeholder="例如：完成 Web 编程实验"
+              autocomplete="off"
+            >
+            <button id="add-todo-button" type="button">添加</button>
+          </div>
+        </div>
+
+        <p id="todo-message" class="todo-message" role="status" aria-live="polite">
+          列表为空，请添加第一条 Todo。
+        </p>
+        <ul id="todo-list" aria-label="Todo 列表"></ul>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
