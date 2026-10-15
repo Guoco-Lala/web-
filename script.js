@@ -14,6 +14,7 @@
   let todos = load();
   let currentFilter = 'all';
   let message = '';
+  let isComposing = false;
 
   function save() {
     try {
@@ -63,8 +64,9 @@
       toggleButton.dataset.action = 'toggle';
       toggleButton.dataset.id = todo.id;
       toggleButton.setAttribute('aria-pressed', String(todo.completed));
-      toggleButton.setAttribute('aria-label', todo.completed ? '标记为未完成' : '标记为已完成');
-      toggleButton.textContent = todo.completed ? '已完成' : '未完成';
+      const toggleAction = todo.completed ? '取消完成' : '标记完成';
+      toggleButton.setAttribute('aria-label', `${toggleAction}：${todo.text}`);
+      toggleButton.textContent = toggleAction;
 
       const text = document.createElement('span');
       text.className = 'todo-text';
@@ -148,7 +150,18 @@
     }
   });
 
+  todoInput.addEventListener('compositionstart', () => {
+    isComposing = true;
+  });
+
+  todoInput.addEventListener('compositionend', () => {
+    isComposing = false;
+  });
+
   todoInput.addEventListener('keydown', (event) => {
+    // 229 covers IME confirmation when compositionend precedes keydown (e.g. Safari).
+    if (isComposing || event.isComposing || event.keyCode === 229) return;
+
     if (event.key === 'Enter') {
       event.preventDefault();
       addTodoButton.click();
