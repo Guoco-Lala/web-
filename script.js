@@ -44,6 +44,15 @@
   }
 
   function render() {
+    const focusedButton = document.activeElement?.closest?.('#todo-list [data-action]');
+    const focusedTodo = focusedButton
+      ? {
+        id: focusedButton.dataset.id,
+        action: focusedButton.dataset.action,
+        index: Array.from(todoList.children).indexOf(focusedButton.closest('li'))
+      }
+      : null;
+
     todoList.replaceChildren();
 
     const visibleTodos = todos.filter((todo) => {
@@ -84,6 +93,15 @@
       fragment.appendChild(item);
     });
     todoList.appendChild(fragment);
+
+    if (focusedTodo) {
+      const actionButtons = Array.from(todoList.querySelectorAll('[data-action]'))
+        .filter((button) => button.dataset.action === focusedTodo.action);
+      const sameTodoButton = actionButtons.find((button) => button.dataset.id === focusedTodo.id);
+      const fallbackButton = actionButtons[Math.min(focusedTodo.index, actionButtons.length - 1)];
+      const fallbackFilter = todoFilters.querySelector(`[data-filter="${currentFilter}"]`);
+      (sameTodoButton || fallbackButton || fallbackFilter)?.focus();
+    }
 
     todoFilters.querySelectorAll('[data-filter]').forEach((button) => {
       button.setAttribute('aria-pressed', String(button.dataset.filter === currentFilter));
