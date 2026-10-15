@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo 列表基础版</title>
+    <title>Todo 列表 V2.0</title>
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
@@ -25,9 +25,16 @@
           </div>
         </div>
 
-        <p id="todo-message" class="todo-message" role="status" aria-live="polite">
-          列表为空，请添加第一条 Todo。
-        </p>
+        <div class="todo-toolbar">
+          <p id="todo-message" class="todo-message" role="status" aria-live="polite">
+            列表为空，请添加第一条 Todo。
+          </p>
+          <div id="todo-filters" class="todo-filters" role="group" aria-label="筛选任务">
+            <button class="filter-button" type="button" data-filter="all" aria-pressed="true">全部</button>
+            <button class="filter-button" type="button" data-filter="active" aria-pressed="false">未完成</button>
+            <button class="filter-button" type="button" data-filter="completed" aria-pressed="false">已完成</button>
+          </div>
+        </div>
         <ul id="todo-list" aria-label="Todo 列表"></ul>
       </section>
     </main>
