@@ -65,6 +65,7 @@
     visibleTodos.forEach((todo) => {
       const item = document.createElement('li');
       item.className = 'todo-item';
+      item.dataset.id = todo.id;
       if (todo.completed) item.classList.add('is-completed');
 
       const toggleButton = document.createElement('button');
@@ -81,15 +82,21 @@
       text.className = 'todo-text';
       text.textContent = todo.text;
 
+      const editButton = document.createElement('button');
+      editButton.className = 'todo-edit';
+      editButton.type = 'button';
+      editButton.dataset.action = 'edit';
+      editButton.textContent = '编辑';
+      editButton.setAttribute('aria-label', `编辑：${todo.text}`);
+
       const removeButton = document.createElement('button');
       removeButton.className = 'todo-remove';
       removeButton.type = 'button';
-      removeButton.dataset.action = 'remove';
-      removeButton.dataset.id = todo.id;
+      removeButton.dataset.action = 'delete';
       removeButton.textContent = '删除';
       removeButton.setAttribute('aria-label', `删除：${todo.text}`);
 
-      item.append(toggleButton, text, removeButton);
+      item.append(toggleButton, text, editButton, removeButton);
       fragment.appendChild(item);
     });
     todoList.appendChild(fragment);
@@ -147,7 +154,8 @@
     return true;
   }
 
-  function removeTodo(id) {
+  function deleteTodo(id) {
+    console.log('[delete]', id);
     todos = todos.filter((todo) => todo.id !== id);
     save();
     render();
@@ -160,6 +168,7 @@
   }
 
   function toggleTodo(id) {
+    console.log('[toggle]', id);
     todos = todos.map((todo) => (
       todo.id === id ? { ...todo, completed: !todo.completed } : todo
     ));
@@ -200,17 +209,39 @@
   });
 
   todoList.addEventListener('click', (event) => {
-    const actionButton = event.target.closest('[data-action]');
-    if (!actionButton) return;
+    if (!(event.target instanceof Element)) return;
 
-    if (actionButton.dataset.action === 'remove') {
-      event.stopPropagation();
-      removeTodo(actionButton.dataset.id);
-      return;
-    }
+    const item = event.target.closest('li');
+    if (!item || !todoList.contains(item)) return;
 
-    if (actionButton.dataset.action === 'toggle') {
-      toggleTodo(actionButton.dataset.id);
+    const id = item.dataset.id;
+    if (!id) return;
+
+    const deleteButton = event.target.closest('[data-action="delete"]');
+    if (deleteButton && item.contains(deleteButton)) {
+      deleteTodo(id);
+    } else {
+      const editButton = event.target.closest('[data-action="edit"]');
+      if (editButton && item.contains(editButton)) {
+        const todo = todos.find((candidate) => candidate.id === id);
+        if (!todo) return;
+
+        const nextText = window.prompt('修改任务', todo.text);
+        if (nextText === null) return;
+
+        const trimmedText = nextText.trim();
+        if (!trimmedText) return;
+
+        todos = todos.map((candidate) => (
+          candidate.id === id
+            ? { ...candidate, text: trimmedText }
+            : candidate
+        ));
+        save();
+        render();
+      } else {
+        toggleTodo(id);
+      }
     }
   });
 
