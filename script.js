@@ -148,6 +148,7 @@
   }
 
   function deleteTodo(id) {
+    console.log('[delete]', id);
     todos = todos.filter((todo) => todo.id !== id);
     save();
     render();
@@ -160,6 +161,7 @@
   }
 
   function toggleTodo(id) {
+    console.log('[toggle]', id);
     todos = todos.map((todo) => (
       todo.id === id ? { ...todo, completed: !todo.completed } : todo
     ));
@@ -211,10 +213,9 @@
     const deleteButton = event.target.closest('[data-action="delete"]');
     if (deleteButton && item.contains(deleteButton)) {
       deleteTodo(id);
-      return;
+    } else {
+      toggleTodo(id);
     }
-
-    toggleTodo(id);
   });
 
   render();
