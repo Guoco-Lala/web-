@@ -82,6 +82,13 @@
       text.className = 'todo-text';
       text.textContent = todo.text;
 
+      const editButton = document.createElement('button');
+      editButton.className = 'todo-edit';
+      editButton.type = 'button';
+      editButton.dataset.action = 'edit';
+      editButton.textContent = '编辑';
+      editButton.setAttribute('aria-label', `编辑：${todo.text}`);
+
       const removeButton = document.createElement('button');
       removeButton.className = 'todo-remove';
       removeButton.type = 'button';
@@ -89,7 +96,7 @@
       removeButton.textContent = '删除';
       removeButton.setAttribute('aria-label', `删除：${todo.text}`);
 
-      item.append(toggleButton, text, removeButton);
+      item.append(toggleButton, text, editButton, removeButton);
       fragment.appendChild(item);
     });
     todoList.appendChild(fragment);
@@ -214,7 +221,27 @@
     if (deleteButton && item.contains(deleteButton)) {
       deleteTodo(id);
     } else {
-      toggleTodo(id);
+      const editButton = event.target.closest('[data-action="edit"]');
+      if (editButton && item.contains(editButton)) {
+        const todo = todos.find((candidate) => candidate.id === id);
+        if (!todo) return;
+
+        const nextText = window.prompt('修改任务', todo.text);
+        if (nextText === null) return;
+
+        const trimmedText = nextText.trim();
+        if (!trimmedText) return;
+
+        todos = todos.map((candidate) => (
+          candidate.id === id
+            ? { ...candidate, text: trimmedText }
+            : candidate
+        ));
+        save();
+        render();
+      } else {
+        toggleTodo(id);
+      }
     }
   });
 
