@@ -1,22 +1,46 @@
-(() => {
-  const todoInput = document.querySelector('#todo-input');
-  const addTodoButton = document.querySelector('#add-todo-button');
-  const todoList = document.querySelector('#todo-list');
-  const todoMessage = document.querySelector('#todo-message');
-  const todoFilters = document.querySelector('#todo-filters');
+import { addTodo as addTodoData, toggleTodo as toggleTodoData, type Todo } from './todo';
 
-  if (!todoInput || !addTodoButton || !todoList || !todoMessage || !todoFilters) {
+type Filter = 'all' | 'active' | 'completed';
+
+function isFilter(value: string | undefined): value is Filter {
+  return value === 'all' || value === 'active' || value === 'completed';
+}
+
+function hasTodoFields(value: unknown): value is { id: unknown; text: string; completed: boolean } {
+  return typeof value === 'object' && value !== null
+    && 'id' in value && 'text' in value && typeof value.text === 'string'
+    && 'completed' in value && typeof value.completed === 'boolean';
+}
+
+(() => {
+  const todoInputElement = document.querySelector('#todo-input');
+  const addTodoButtonElement = document.querySelector('#add-todo-button');
+  const todoListElement = document.querySelector('#todo-list');
+  const todoMessageElement = document.querySelector('#todo-message');
+  const todoFiltersElement = document.querySelector('#todo-filters');
+
+  if (!(todoInputElement instanceof HTMLInputElement)
+    || !(addTodoButtonElement instanceof HTMLButtonElement)
+    || !(todoListElement instanceof HTMLUListElement)
+    || !(todoMessageElement instanceof HTMLElement)
+    || !(todoFiltersElement instanceof HTMLElement)) {
     console.error('Todo 初始化失败：缺少必需的页面元素。');
     return;
   }
 
+  const todoInput = todoInputElement;
+  const addTodoButton = addTodoButtonElement;
+  const todoList = todoListElement;
+  const todoMessage = todoMessageElement;
+  const todoFilters = todoFiltersElement;
+
   const STORAGE_KEY = 'todo-v2-todos';
   let todos = load();
-  let currentFilter = 'all';
+  let currentFilter: Filter = 'all';
   let message = '';
   let isComposing = false;
 
-  function save() {
+  function save(): void {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
     } catch (error) {
@@ -25,31 +49,54 @@
     }
   }
 
-  function load() {
+  function load(): Todo[] {
     try {
       const savedTodos = localStorage.getItem(STORAGE_KEY);
       if (!savedTodos) return [];
 
-      const parsedTodos = JSON.parse(savedTodos);
+      const parsedTodos: unknown = JSON.parse(savedTodos);
       if (!Array.isArray(parsedTodos)) return [];
-      return parsedTodos.filter((todo) => (
-        todo && typeof todo.id === 'string' &&
-        typeof todo.text === 'string' &&
-        typeof todo.completed === 'boolean'
-      ));
+      const values: unknown[] = parsedTodos;
+      const result: Todo[] = [];
+      const usedIds = new Set<number>();
+      // Reserve valid numeric IDs before assigning IDs to legacy UUID tasks.
+      for (const value of values) {
+        if (hasTodoFields(value) && typeof value.id === 'number'
+          && Number.isSafeInteger(value.id) && value.id > 0) usedIds.add(value.id);
+      }
+      let legacyId = 1;
+      const loadedIds = new Set<number>();
+      for (const value of values) {
+        if (!hasTodoFields(value)) continue;
+        let id: number;
+        if (typeof value.id === 'number' && Number.isSafeInteger(value.id) && value.id > 0) {
+          id = value.id;
+        } else if (typeof value.id === 'string' && value.id.trim() !== '') {
+          // W8 used UUID strings; retain their text and state with new numeric IDs.
+          while (usedIds.has(legacyId)) legacyId += 1;
+          id = legacyId;
+          usedIds.add(id);
+        } else {
+          continue;
+        }
+        if (loadedIds.has(id)) continue;
+        loadedIds.add(id);
+        result.push({ id, text: value.text, completed: value.completed });
+      }
+      return result;
     } catch (error) {
       console.error('Todo 读取失败：', error);
       return [];
     }
   }
 
-  function render() {
-    const focusedButton = document.activeElement?.closest?.('#todo-list [data-action]');
+  function render(): void {
+    const focusedButton = document.activeElement?.closest<HTMLButtonElement>('#todo-list button[data-action]');
     const focusedTodo = focusedButton
       ? {
         id: focusedButton.dataset.id,
         action: focusedButton.dataset.action,
-        index: Array.from(todoList.children).indexOf(focusedButton.closest('li'))
+        index: Array.from(todoList.children).findIndex((item) => item === focusedButton.closest('li'))
       }
       : null;
 
@@ -65,14 +112,14 @@
     visibleTodos.forEach((todo) => {
       const item = document.createElement('li');
       item.className = 'todo-item';
-      item.dataset.id = todo.id;
+      item.dataset.id = String(todo.id);
       if (todo.completed) item.classList.add('is-completed');
 
       const toggleButton = document.createElement('button');
       toggleButton.className = 'todo-toggle';
       toggleButton.type = 'button';
       toggleButton.dataset.action = 'toggle';
-      toggleButton.dataset.id = todo.id;
+      toggleButton.dataset.id = String(todo.id);
       toggleButton.setAttribute('aria-pressed', String(todo.completed));
       const toggleAction = todo.completed ? '取消完成' : '标记完成';
       toggleButton.setAttribute('aria-label', `${toggleAction}：${todo.text}`);
@@ -86,6 +133,7 @@
       editButton.className = 'todo-edit';
       editButton.type = 'button';
       editButton.dataset.action = 'edit';
+      editButton.dataset.id = String(todo.id);
       editButton.textContent = '编辑';
       editButton.setAttribute('aria-label', `编辑：${todo.text}`);
 
@@ -93,6 +141,7 @@
       removeButton.className = 'todo-remove';
       removeButton.type = 'button';
       removeButton.dataset.action = 'delete';
+      removeButton.dataset.id = String(todo.id);
       removeButton.textContent = '删除';
       removeButton.setAttribute('aria-label', `删除：${todo.text}`);
 
@@ -102,15 +151,15 @@
     todoList.appendChild(fragment);
 
     if (focusedTodo) {
-      const actionButtons = Array.from(todoList.querySelectorAll('[data-action]'))
+      const actionButtons = Array.from(todoList.querySelectorAll<HTMLButtonElement>('button[data-action]'))
         .filter((button) => button.dataset.action === focusedTodo.action);
       const sameTodoButton = actionButtons.find((button) => button.dataset.id === focusedTodo.id);
       const fallbackButton = actionButtons[Math.min(focusedTodo.index, actionButtons.length - 1)];
-      const fallbackFilter = todoFilters.querySelector(`[data-filter="${currentFilter}"]`);
+      const fallbackFilter = todoFilters.querySelector<HTMLButtonElement>(`[data-filter="${currentFilter}"]`);
       (sameTodoButton || fallbackButton || fallbackFilter)?.focus();
     }
 
-    todoFilters.querySelectorAll('[data-filter]').forEach((button) => {
+    todoFilters.querySelectorAll<HTMLButtonElement>('button[data-filter]').forEach((button) => {
       button.setAttribute('aria-pressed', String(button.dataset.filter === currentFilter));
     });
 
@@ -126,8 +175,8 @@
     }
   }
 
-  function addTodo(text) {
-    const todoText = text.trim();
+  function addTodo(text: string | null): boolean {
+    const todoText = text === null ? '' : text.trim();
     const normalizedTodoText = todoText.toLocaleLowerCase('zh-CN');
 
     if (!todoText) {
@@ -144,34 +193,34 @@
       return false;
     }
 
-    todos = [...todos, {
-      id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      text: todoText,
-      completed: false
-    }];
+    const nextId = todos.reduce((max, todo) => Math.max(max, todo.id), 0) + 1;
+    if (!Number.isSafeInteger(nextId)) {
+      message = '任务 ID 已超出安全整数范围，无法添加。';
+      render();
+      return false;
+    }
+    todos = addTodoData(todos, todoText, nextId);
     save();
     render();
     return true;
   }
 
-  function deleteTodo(id) {
+  function deleteTodo(id: number): void {
     console.log('[delete]', id);
     todos = todos.filter((todo) => todo.id !== id);
     save();
     render();
   }
 
-  function clearCompleted() {
+  function clearCompleted(): void {
     todos = todos.filter((todo) => !todo.completed);
     save();
     render();
   }
 
-  function toggleTodo(id) {
+  function toggleTodo(id: number): void {
     console.log('[toggle]', id);
-    todos = todos.map((todo) => (
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
+    todos = toggleTodoData(todos, id);
     save();
     render();
   }
@@ -202,9 +251,12 @@
   });
 
   todoFilters.addEventListener('click', (event) => {
-    const filterButton = event.target.closest('[data-filter]');
-    if (!filterButton) return;
-    currentFilter = filterButton.dataset.filter;
+    if (!(event.target instanceof Element)) return;
+    const filterButton = event.target.closest<HTMLButtonElement>('button[data-filter]');
+    if (!filterButton || !todoFilters.contains(filterButton)) return;
+    const filter = filterButton.dataset.filter;
+    if (!isFilter(filter)) return;
+    currentFilter = filter;
     render();
   });
 
@@ -214,8 +266,10 @@
     const item = event.target.closest('li');
     if (!item || !todoList.contains(item)) return;
 
-    const id = item.dataset.id;
-    if (!id) return;
+    const rawId = item.dataset.id;
+    if (rawId === undefined || rawId.trim() === '') return;
+    const id = Number(rawId);
+    if (!Number.isSafeInteger(id) || id <= 0) return;
 
     const deleteButton = event.target.closest('[data-action="delete"]');
     if (deleteButton && item.contains(deleteButton)) {
