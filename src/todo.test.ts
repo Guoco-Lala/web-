@@ -121,9 +121,9 @@ test('addTodo 连续添加相同文本且 ID 不同时两次均成功', () => {
 
 // 维度：格式。特殊空白也应被拒绝，原任务保持不变。
 test.each([
-  '\u00A0',          // 不换行空格
-  '\u3000',          // 全角空格
-  '\uFEFF',          // BOM / 零宽不换行空格
+  '\u00A0', // 不换行空格
+  '\u3000', // 全角空格
+  '\uFEFF', // BOM / 零宽不换行空格
   ' \u00A0\u3000\t\n'
 ])('addTodo 拒绝特殊空白文本 %j', (text) => {
   const fixture = createFixture();
@@ -138,11 +138,7 @@ test.each([
 test('addTodo 正确保留含中文和表情的有效文本', () => {
   const fixture = createFixture();
 
-  const result = addTodo(
-    fixture.todos,
-    '\u3000完成 Web 实验 📚\u3000',
-    3
-  );
+  const result = addTodo(fixture.todos, '\u3000完成 Web 实验 📚\u3000', 3);
 
   expect(result).not.toBe(fixture.todos);
   expect(result).toStrictEqual([
@@ -181,9 +177,7 @@ test('addTodo 可以向空列表添加任务', () => {
   const result = addTodo(fixture.todos, '首个任务', 1);
 
   expect(result).not.toBe(fixture.todos);
-  expect(result).toStrictEqual([
-    { id: 1, text: '首个任务', completed: false }
-  ]);
+  expect(result).toStrictEqual([{ id: 1, text: '首个任务', completed: false }]);
   fixture.expectUnchanged();
 });
 

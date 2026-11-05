@@ -23,8 +23,6 @@ export function addTodo(
 
 export function toggleTodo(todos: Todo[], id: number): Todo[] {
   return todos.map((todo) =>
-    todo.id === id
-      ? { ...todo, completed: !todo.completed }
-      : todo
+    todo.id === id ? { ...todo, completed: !todo.completed } : todo
   );
 }
