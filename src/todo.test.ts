@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest';
-import { addTodo, toggleTodo, type Todo } from './todo';
+import { addTodo, deleteTodo, toggleTodo, type Todo } from './todo';
 
 // 每次调用均创建独立数据；冻结输入以捕获写入，再检查内容和对象引用。
 function createFixture(
@@ -267,4 +267,14 @@ test('toggleTodo 连续切换同一任务两次后恢复原状态', () => {
   expect(second).toStrictEqual(initial.snapshot);
   intermediate.expectUnchanged();
   initial.expectUnchanged();
+});
+
+test('deleteTodo 只删除指定任务并保留原数组', () => {
+  const fixture = createFixture();
+
+  const result = deleteTodo(fixture.todos, 1);
+
+  expect(result).not.toBe(fixture.todos);
+  expect(result).toStrictEqual([fixture.snapshot[1]]);
+  fixture.expectUnchanged();
 });

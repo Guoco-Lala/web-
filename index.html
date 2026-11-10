@@ -3,73 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Todo 列表 V2.0</title>
+    <title>Todo 列表 V4.0</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main class="todo-page">
-      <section class="todo-panel" aria-labelledby="page-title">
-        <h1 id="page-title">Todo 列表</h1>
-        <p>记录需要完成的事项。</p>
-
-        <div class="todo-form">
-          <label for="todo-input">待办事项</label>
-          <div class="input-row">
-            <input
-              id="todo-input"
-              type="text"
-              placeholder="例如：完成 Web 编程实验"
-              autocomplete="off"
-            />
-            <button id="add-todo-button" type="button">添加</button>
-          </div>
-        </div>
-
-        <div class="todo-toolbar">
-          <p
-            id="todo-message"
-            class="todo-message"
-            role="status"
-            aria-live="polite"
-          >
-            列表为空，请添加第一条 Todo。
-          </p>
-          <div
-            id="todo-filters"
-            class="todo-filters"
-            role="group"
-            aria-label="筛选任务"
-          >
-            <button
-              class="filter-button"
-              type="button"
-              data-filter="all"
-              aria-pressed="true"
-            >
-              全部
-            </button>
-            <button
-              class="filter-button"
-              type="button"
-              data-filter="active"
-              aria-pressed="false"
-            >
-              未完成
-            </button>
-            <button
-              class="filter-button"
-              type="button"
-              data-filter="completed"
-              aria-pressed="false"
-            >
-              已完成
-            </button>
-          </div>
-        </div>
-        <ul id="todo-list" aria-label="Todo 列表"></ul>
-      </section>
-    </main>
-
-    <script type="module" src="/src/main.ts"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

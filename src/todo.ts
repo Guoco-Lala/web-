@@ -26,3 +26,7 @@ export function toggleTodo(todos: Todo[], id: number): Todo[] {
     todo.id === id ? { ...todo, completed: !todo.completed } : todo
   );
 }
+
+export function deleteTodo(todos: Todo[], id: number): Todo[] {
+  return todos.filter((todo) => todo.id !== id);
+}
