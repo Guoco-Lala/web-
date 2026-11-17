@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { addTodo, deleteTodo, toggleTodo, type Todo } from '../todo';
+import { useTheme } from '../context/ThemeContext';
 import TodoForm from './TodoForm';
 import TodoList from './TodoList';
 
@@ -76,6 +77,7 @@ function loadTodos(): Todo[] {
 }
 
 export default function TodoApp() {
+  const { theme, setTheme } = useTheme();
   const [todos, setTodos] = useState<Todo[]>(loadTodos);
   const [text, setText] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
@@ -162,9 +164,21 @@ export default function TodoApp() {
         : `共 ${todos.length} 条 Todo，当前显示 ${visibleTodos.length} 条。`);
 
   return (
-    <main className="todo-page">
+    <main className="todo-page" data-theme={theme}>
       <section className="todo-panel" aria-labelledby="page-title">
-        <h1 id="page-title">Todo 列表</h1>
+        <div className="todo-header">
+          <h1 id="page-title">Todo 列表</h1>
+          <button
+            className="theme-toggle"
+            type="button"
+            aria-pressed={theme === 'dark'}
+            onClick={() =>
+              setTheme((current) => (current === 'light' ? 'dark' : 'light'))
+            }
+          >
+            深色主题：{theme === 'dark' ? '开' : '关'}
+          </button>
+        </div>
         <p>记录需要完成的事项。</p>
 
         <TodoForm text={text} onTextChange={setText} onAdd={handleAdd} />

@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import TodoApp from './components/TodoApp';
+import { ThemeProvider } from './context/ThemeContext';
 
 const appElement = document.querySelector('#app');
 
@@ -10,6 +11,8 @@ if (!appElement) {
 
 createRoot(appElement).render(
   <StrictMode>
-    <TodoApp />
+    <ThemeProvider>
+      <TodoApp />
+    </ThemeProvider>
   </StrictMode>
 );

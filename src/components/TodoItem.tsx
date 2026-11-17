@@ -1,4 +1,5 @@
 import type { Todo } from '../todo';
+import { useTheme } from '../context/ThemeContext';
 
 export interface TodoItemProps {
   todo: Todo;
@@ -13,8 +14,11 @@ export default function TodoItem({
   onEdit,
   onDelete
 }: TodoItemProps) {
+  const { theme } = useTheme();
   return (
-    <li className={`todo-item${todo.completed ? ' is-completed' : ''}`}>
+    <li
+      className={`todo-item theme-${theme}${todo.completed ? ' is-completed' : ''}`}
+    >
       <button
         className="todo-toggle"
         type="button"
