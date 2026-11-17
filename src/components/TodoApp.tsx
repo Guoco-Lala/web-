@@ -5,7 +5,7 @@ import TodoForm from './TodoForm';
 import TodoList from './TodoList';
 
 type Filter = 'all' | 'active' | 'completed';
-const STORAGE_KEY = 'todo-v2-todos';
+const STORAGE_KEY = 'todos';
 
 interface StoredTodoShape {
   id: unknown;
