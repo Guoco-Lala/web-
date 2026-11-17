@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { addTodo, deleteTodo, toggleTodo, type Todo } from '../todo';
 import { useTheme } from '../context/ThemeContext';
 import TodoForm from './TodoForm';
@@ -26,6 +26,7 @@ function hasTodoFields(value: unknown): value is StoredTodoShape {
 }
 
 function loadTodos(): Todo[] {
+  // 初始化读取不写入存储，允许 StrictMode 在开发环境重复检查。
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) return [];
@@ -78,19 +79,21 @@ function loadTodos(): Todo[] {
 
 export default function TodoApp() {
   const { theme, setTheme } = useTheme();
+  // 传入函数进行惰性初始化，首次渲染就使用安全读取的任务。
   const [todos, setTodos] = useState<Todo[]>(loadTodos);
   const [text, setText] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [message, setMessage] = useState('');
 
-  function persist(nextTodos: Todo[]) {
+  // 唯一的任务写入入口；操作函数只更新 state。
+  useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextTodos));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
     } catch (error) {
       console.error('Todo 保存失败：', error);
       setMessage('保存 Todo 时发生错误，请检查浏览器存储设置。');
     }
-  }
+  }, [todos]);
 
   function handleAdd(): boolean {
     const normalizedText = text.trim();
@@ -116,7 +119,6 @@ export default function TodoApp() {
     }
     const nextTodos = addTodo(todos, normalizedText, nextId);
     setTodos(nextTodos);
-    persist(nextTodos);
     setMessage('');
     return true;
   }
@@ -124,14 +126,12 @@ export default function TodoApp() {
   function handleToggle(id: number) {
     const nextTodos = toggleTodo(todos, id);
     setTodos(nextTodos);
-    persist(nextTodos);
     setMessage('');
   }
 
   function handleDelete(id: number) {
     const nextTodos = deleteTodo(todos, id);
     setTodos(nextTodos);
-    persist(nextTodos);
     setMessage('');
   }
 
@@ -145,7 +145,6 @@ export default function TodoApp() {
       item.id === id ? { ...item, text: nextText } : item
     );
     setTodos(nextTodos);
-    persist(nextTodos);
     setMessage('');
   }
 
